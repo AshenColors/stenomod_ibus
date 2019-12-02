@@ -19,82 +19,82 @@
 // Define the baud rate
 #define BAUD_RATE 115200
 
-// We've got 24 button states to manage, and each channel holds 16 bits, so 2 
+// We've got 24 button states to manage, and each channel holds 16 bits, so 2
 #define NUM_CHANNELS 2
 // /////////////////
 
-const byte ROWS = 6;
-const byte COLS = 4;
 
-// Right side keys are all lowercase, S2 is X
-const char keys[ROWS][COLS] = {
+void setup() {
+  //nothing to set up, since we're compartmentalizing things
+}
+
+void loop() {
+  while (true) {
+    tx_bolt_mode();
+  }
+}
+
+void tx_bolt_mode() {
+  //all the setup goes here to isolate it in preparation of adding something new
+  const byte ROWS = 6;
+  const byte COLS = 4;
+
+  // Right side keys are all lowercase, S2 is X
+  const char keys[ROWS][COLS] = {
     {'H', 'u', 'g', 'S'},
     {'W', 'e', 'l', '#'},
     {'P', '*', 'b', 'z'},
     {'K', 'O', 'p', 'd'},
     {'T', 'A', 'r', 's'},
     {'X', 'R', 'f', 't'},
-};
+  };
 
-const byte rowPins[ROWS] = {19, 18, 17, 16, 15, 14};
-const byte colPins[COLS] = {11, 10, 9, 8}; 
+  const byte rowPins[ROWS] = {19, 18, 17, 16, 15, 14};
+  const byte colPins[COLS] = {11, 10, 9, 8};
 
-Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
-IBus ibus(NUM_CHANNELS);
+  Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
+  IBus ibus(NUM_CHANNELS);
+  int bit, row, col, bm_ch = 0;
+  unsigned long time = millis();
 
-void setup() {
-    analogReference(ANALOG_REFERENCE); // use the defined ADC reference voltage source
-    Serial.begin(BAUD_RATE);           // setup serial
-}
+  analogReference(ANALOG_REFERENCE); // use the defined ADC reference voltage source
+  Serial.begin(BAUD_RATE);           // setup serial
 
-void loop() {
-    int bit, row, col, bm_ch = 0;
-    unsigned long time = millis();
-    
+  //main loop
+  while (true) {
     ibus.begin();
 
     kpd.getKeys();
     //scan the entire keymap, querying individually
-    for(col = 0; col < COLS; col++) {
-        for(row = 0; row < ROWS; row++) {
-            bool keyPressed = false;
+    for (col = 0; col < COLS; col++) {
+      for (row = 0; row < ROWS; row++) {
+        bool keyPressed = false;
 
-            //search the list of keys for the one we're working on right now
-            for (byte i = 0; i < LIST_MAX; i++) {
-                 if (kpd.key[i].kchar == keys[row][col]) {
-                     if ((kpd.key[i].kstate == PRESSED) || (kpd.key[i].kstate == HOLD)) {
-                        keyPressed = true;
-                     }
-                 }
+        //search the list of keys for the one we're working on right now
+        for (byte i = 0; i < LIST_MAX; i++) {
+          if (kpd.key[i].kchar == keys[row][col]) {
+            if ((kpd.key[i].kstate == PRESSED) || (kpd.key[i].kstate == HOLD)) {
+              keyPressed = true;
             }
-            if(keyPressed) {
-                bm_ch |= 1 << bit;
-            }
-            if(bit == 15 || (row == ROWS - 1 && col == COLS - 1)) { // data for one channel ready
-                ibus.write(bm_ch);
-                bm_ch = 0;
-                bit = 0;
-                continue;
-            }
-            bit++;
+          }
         }
+        if (keyPressed) {
+          bm_ch |= 1 << bit;
+        }
+        if (bit == 15 || (row == ROWS - 1 && col == COLS - 1)) { // data for one channel ready
+          ibus.write(bm_ch);
+          bm_ch = 0;
+          bit = 0;
+          continue;
+        }
+        bit++;
+      }
     }
 
-/*
-    for (int i = 0; i < NUM_DIGITAL_BITMAPPED_INPUTS; i++) { // Scan the whole key list.
-        int bit = i % 16;
-        if (kpd.key[i].kstate == PRESSED) { // Find if it's being held down.
-            bm_ch |= 1 << bit; // set a bit for each depressed key
-        }
-        if(bit == 15 || i == NUM_DIGITAL_BITMAPPED_INPUTS - 1) { // data for one channel ready
-            ibus.write(bm_ch);
-            bm_ch = 0;
-        }
-    }
-*/
     ibus.end();
-    
+
     time = millis() - time; // time elapsed in reading the inputs
-    if(time < UPDATE_INTERVAL) // sleep till it is time for the next update
-        delay(UPDATE_INTERVAL  - time);
+    if (time < UPDATE_INTERVAL) // sleep till it is time for the next update
+      delay(UPDATE_INTERVAL  - time);
+  }
 }
