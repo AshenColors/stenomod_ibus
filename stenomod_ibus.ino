@@ -27,17 +27,17 @@ const byte ROWS = 6;
 const byte COLS = 4;
 
 // Right side keys are all lowercase, S2 is X
-char keys[ROWS][COLS] = {
-    {'X', 'R', 'f', 't'},
-    {'T', 'A', 'r', 's'},
-    {'K', 'O', 'p', 'd'},
-    {'P', '*', 'b', 'z'},
-    {'W', 'e', 'l', '#'},
+const char keys[ROWS][COLS] = {
     {'H', 'u', 'g', 'S'},
+    {'W', 'e', 'l', '#'},
+    {'P', '*', 'b', 'z'},
+    {'K', 'O', 'p', 'd'},
+    {'T', 'A', 'r', 's'},
+    {'X', 'R', 'f', 't'},
 };
 
-byte rowPins[ROWS] = {14, 15, 16, 17, 18, 19};
-byte colPins[COLS] = {11, 10, 9, 8}; 
+const byte rowPins[ROWS] = {19, 18, 17, 16, 15, 14};
+const byte colPins[COLS] = {11, 10, 9, 8}; 
 
 Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 IBus ibus(NUM_CHANNELS);
